@@ -1,0 +1,191 @@
+Query 1: Proj1 QSet1 Q1 
+
+WITH cat_rent_grp AS ( 
+
+    SELECT f.title film_name, 
+
+           c.name cat_name, 
+
+           r.rental_date rented 
+
+      FROM film f 
+
+      JOIN film_category fc 
+
+        ON f.film_id = fc.film_id 
+
+      JOIN category c 
+
+        ON c.category_id = fc.category_id 
+
+      JOIN inventory i 
+
+        ON f.film_id = i.film_id 
+
+      JOIN rental r 
+
+        ON r.inventory_id = i.inventory_id 
+
+WHERE c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music') 
+
+ORDER BY 2, 1) 
+
+  
+
+SELECT film_name, 
+
+       cat_name, 
+
+       COUNT(rented) AS rentals 
+
+  FROM cat_rent_grp 
+
+GROUP BY 2, 1 
+
+ORDER BY 2, 1; 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Query 2: Proj1 QSet1 Q2 
+
+ 
+WITH family_movies AS (
+    SELECT f.title film_name, c.name cat_name
+      FROM category c
+      JOIN film_category fc
+        ON fc.category_id = c.category_id
+      JOIN film f
+        ON fc.film_id = f.film_id
+WHERE name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')
+ORDER BY 1),
+
+rntl_dur AS (
+  	SELECT f.title filmname, fm.cat_name catname, f.rental_duration rendur,
+NTILE(4) OVER (PARTITION BY f.rental_duration ORDER BY fm.cat_name) AS std_quartile
+  	FROM family_movies fm
+    JOIN film f
+  	ON f.title = fm.film_name
+	GROUP BY 1, 2, 3)
+
+SELECT fm.film_name,
+       fm.cat_name, 
+       rd.rendur,
+       rd.std_quartile       
+  FROM rntl_dur rd
+  JOIN family_movies fm
+    ON fm.film_name = rd.filmname
+ORDER BY 4;
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Query 3: Proj1 QSet1 Q3 
+
+ 
+
+WITH family_movies AS ( 
+
+    SELECT f.title film_name, c.name cat_name 
+
+      FROM category c 
+
+      JOIN film_category fc 
+
+        ON fc.category_id = c.category_id 
+
+      JOIN film f 
+
+        ON fc.film_id = f.film_id 
+
+WHERE name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music') 
+
+ORDER BY 1), 
+
+  
+
+qrtls AS ( 
+
+SELECT fm.film_name filmname, fm.cat_name catname, 
+
+        f.rental_duration daysrented, 
+
+        NTILE(4) OVER (PARTITION BY fm.cat_name ORDER BY rental_duration) AS std_quartile 
+
+  FROM family_movies fm 
+
+  JOIN film f 
+
+    ON f.title = fm.film_name 
+
+ORDER BY 4) 
+
+  
+
+SELECT q.catname category, 
+
+       q.std_quartile rent_len_Cat, 
+
+       COUNT(q.std_quartile) Count 
+
+  FROM qrtls q 
+
+GROUP BY 1, 2 
+
+ORDER BY 1, 2; 
+
+ 
+
+ 
+
+Query 4: Proj1 QSet2 Q1 
+
+ 
+
+SELECT DATE_PART('month', r.rental_date) rental_month, 
+
+       DATE_PART('year', r.rental_date) rental_year, 
+
+       str.store_id, 
+
+       COUNT(r.rental_id) 
+
+  FROM rental r 
+
+  JOIN staff stf 
+
+    ON stf.staff_id = r.staff_id 
+
+  JOIN store str 
+
+    ON str.store_id = stf.store_id 
+
+GROUP BY 2, 1, 3 
+
+ORDER BY 4 DESC; 
